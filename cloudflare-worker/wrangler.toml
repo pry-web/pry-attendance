@@ -1,0 +1,14 @@
+name = "pry-attendance-api"
+main = "src/index.js"
+compatibility_date = "2026-08-12"
+
+[vars]
+# Comma-separated exact frontend origins. Do not add a trailing slash.
+ALLOWED_ORIGINS = "https://YOUR-GITHUB-USERNAME.github.io"
+
+# Set this after deploying the Apps Script API.
+GAS_WEB_APP_URL = "https://script.google.com/macros/s/YOUR-DEPLOYMENT-ID/exec"
+
+# Add secrets with these commands; never put their values in this file:
+# npx wrangler secret put OFFICER_KEY
+# npx wrangler secret put GAS_SHARED_SECRET

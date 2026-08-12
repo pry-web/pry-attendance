@@ -1,0 +1,12 @@
+{
+  "name": "pry-google-apps-script-attendance",
+  "version": "3.0.0",
+  "private": true,
+  "scripts": {
+    "build:css": "node build-tailwind.js",
+    "build:web": "node build-web.js"
+  },
+  "devDependencies": {
+    "tailwindcss": "^4.1.10"
+  }
+}

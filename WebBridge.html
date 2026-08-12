@@ -1,0 +1,80 @@
+<script>
+// External-host bridge: the static frontend calls the secured Cloudflare Worker.
+window.PRY_EXTERNAL_HOST = true;
+window.__PRY_PREVIEW__ = false;
+
+(function () {
+  const config = window.PRY_CONFIG || {};
+  const apiUrl = String(config.apiUrl || '').replace(/\/$/, '');
+  const keyName = 'pry.officerAccessKey';
+
+  function loginForOfficer(message) {
+    return new Promise(resolve => {
+      const root = document.getElementById('modalRoot');
+      root.innerHTML = `<div class="modal-backdrop"><div class="modal">
+        <div class="modal-head"><div><h2>Officer Access</h2><p class="card-sub">Sign in to the secured PRY attendance service.</p></div></div>
+        <form id="remoteOfficerLogin">
+          <div class="modal-body">
+            ${message ? `<div class="notice warning">${String(message).replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]))}</div>` : ''}
+            <div class="field ${message ? 'mt-4' : ''}"><label class="form-label" for="remoteOfficerKey">Officer Access Key</label><input id="remoteOfficerKey" type="password" autocomplete="current-password" required autofocus placeholder="Enter the key provided by the administrator"></div>
+            <p class="card-sub mt-3">The access key is kept only for this browser tab and is never stored in the GitHub repository.</p>
+          </div>
+          <div class="modal-foot"><button class="btn primary" type="submit">Continue</button></div>
+        </form>
+      </div></div>`;
+      root.querySelector('#remoteOfficerLogin').onsubmit = event => {
+        event.preventDefault();
+        const key = root.querySelector('#remoteOfficerKey').value.trim();
+        if (!key) return;
+        sessionStorage.setItem(keyName, key);
+        root.innerHTML = '';
+        resolve(key);
+      };
+    });
+  }
+
+  async function getOfficerKey(message) {
+    return sessionStorage.getItem(keyName) || loginForOfficer(message || '');
+  }
+
+  async function callRemote(fn, args, retry = true) {
+    if (!apiUrl || apiUrl.includes('YOUR-WORKER')) {
+      throw new Error('The external API URL has not been configured. Update web.config.js and rebuild the site.');
+    }
+    const key = await getOfficerKey();
+    const response = await fetch(`${apiUrl}/api`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-PRY-Officer-Key': key},
+      body: JSON.stringify({fn, args}),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (response.status === 401 && retry) {
+      sessionStorage.removeItem(keyName);
+      await loginForOfficer('The access key was not accepted. Please try again.');
+      return callRemote(fn, args, false);
+    }
+    if (!response.ok || !payload.ok) {
+      throw new Error(payload.error || `PRY API error (${response.status})`);
+    }
+    return payload.result;
+  }
+
+  const functions = [
+    'bootstrap', 'createEvent', 'archiveEvent', 'restoreEvent', 'deleteEvent',
+    'getParticipants', 'addParticipant', 'importParticipants', 'getSessions',
+    'saveSession', 'deleteSession', 'removeParticipant', 'removeParticipants',
+    'recordAttendance', 'syncPendingAttendance', 'getDashboard', 'getReport',
+    'getExportData',
+  ];
+
+  window.PRY_PREVIEW_API = Object.fromEntries(
+    functions.map(fn => [fn, (...args) => callRemote(fn, args)])
+  );
+  window.PRY_REMOTE_AUTH = {
+    signOut() {
+      sessionStorage.removeItem(keyName);
+      location.reload();
+    },
+  };
+})();
+</script>
