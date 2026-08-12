@@ -11,7 +11,9 @@ const replacements = {
   "<?!= include('Tailwind'); ?>": read('Tailwind.html'),
   "<?!= include('Theme'); ?>": read('Theme.html'),
   "<?!= include('Logo'); ?>": read('Logo.html').trim(),
-  "<?!= include('Favicon'); ?>": 'assets/norsur-favicon.png',
+  // Embed the small favicon so GitHub Pages does not depend on an assets
+  // directory being uploaded separately.
+  "<?!= include('Favicon'); ?>": read('Favicon.html').trim(),
   "<?!= include('App'); ?>": `${read('WebBridge.html')}\n${appSource}`,
 };
 
@@ -34,7 +36,6 @@ if (index.includes('<?!=')) {
 }
 
 fs.mkdirSync(outputDir, {recursive: true});
-fs.cpSync(path.join(root, 'assets'), path.join(outputDir, 'assets'), {recursive: true});
 fs.writeFileSync(path.join(outputDir, 'index.html'), index, 'utf8');
 fs.writeFileSync(path.join(outputDir, '.nojekyll'), '', 'utf8');
 console.log(`Built ${path.join('dist', 'index.html')} (${Buffer.byteLength(index)} bytes)`);
