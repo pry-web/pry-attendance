@@ -11,6 +11,7 @@ const replacements = {
   "<?!= include('Tailwind'); ?>": read('Tailwind.html'),
   "<?!= include('Theme'); ?>": read('Theme.html'),
   "<?!= include('Logo'); ?>": read('Logo.html').trim(),
+  "<?!= include('Favicon'); ?>": 'assets/norsur-favicon.png',
   "<?!= include('App'); ?>": `${read('WebBridge.html')}\n${appSource}`,
 };
 
@@ -19,7 +20,7 @@ for (const [placeholder, contents] of Object.entries(replacements)) {
   // Use a replacer function so JavaScript sequences such as `$$` are copied
   // literally. Passing the file contents as a replacement string makes
   // String.replace interpret `$$` as a single dollar sign and corrupts App.js.
-  index = index.replace(placeholder, () => contents);
+  index = index.split(placeholder).join(contents);
 }
 
 const config = read('web.config.js');
@@ -33,6 +34,7 @@ if (index.includes('<?!=')) {
 }
 
 fs.mkdirSync(outputDir, {recursive: true});
+fs.cpSync(path.join(root, 'assets'), path.join(outputDir, 'assets'), {recursive: true});
 fs.writeFileSync(path.join(outputDir, 'index.html'), index, 'utf8');
 fs.writeFileSync(path.join(outputDir, '.nojekyll'), '', 'utf8');
 console.log(`Built ${path.join('dist', 'index.html')} (${Buffer.byteLength(index)} bytes)`);
