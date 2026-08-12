@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="description" content="PRY QR attendance system for DPRY and NPRY camps using Google Sheets and Google Drive.">
+  <link rel="icon" type="image/png" sizes="96x96" href="<?!= include('Favicon'); ?>">
+  <title>PRY Attendance System</title>
+  <?!= include('Tailwind'); ?>
+  <?!= include('Theme'); ?>
+</head>
+<body class="app-shell min-h-screen bg-slate-50 text-slate-900 antialiased">
+  <div id="toast" class="app-toast pointer-events-none fixed right-4 top-4 z-[100] translate-y-[-8px] rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white opacity-0 shadow-2xl transition-all duration-200" aria-live="polite"></div>
+
+  <div class="app-layout min-h-screen lg:grid lg:grid-cols-[260px_minmax(0,1fr)]">
+    <aside class="app-sidebar bg-slate-950 text-white lg:fixed lg:inset-y-0 lg:z-30 lg:w-[260px]">
+      <div class="flex h-full flex-col px-4 py-4 lg:px-5 lg:py-6">
+        <div class="sidebar-brand mb-4 flex items-center gap-3 border-b border-white/10 pb-4 lg:mb-8 lg:pb-6">
+          <img src="<?!= include('Logo'); ?>" alt="Pentecostal Royal Youth logo" class="brand-logo shrink-0 rounded-full bg-white shadow-lg" style="width:52px;height:52px;object-fit:contain;padding:2px">
+          <div class="min-w-0">
+            <div class="brand-title text-sm font-extrabold tracking-tight" style="line-height:1.15rem">PRY Attendance System</div>
+            <div class="brand-subtitle mt-0.5 text-xs text-slate-400">Pentecostal Royal Youth</div>
+          </div>
+        </div>
+
+        <nav id="nav" class="flex gap-2 overflow-x-auto pb-1 lg:grid lg:overflow-visible lg:pb-0">
+          <button data-view="dashboard" class="nav-item flex shrink-0 items-center gap-3 rounded-xl bg-white/10 px-3 py-3 text-left text-sm font-semibold text-white transition hover:bg-white/10 lg:w-full" aria-current="page"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg></span><span>Dashboard</span></button>
+          <button data-view="events" class="nav-item flex shrink-0 items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white lg:w-full" aria-current="false"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18M8 14h3M8 17h7"/></svg></span><span>Events</span></button>
+          <button data-view="participants" class="nav-item flex shrink-0 items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white lg:w-full" aria-current="false"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c.4-4 2.2-6 5.5-6s5.1 2 5.5 6M16 4.5a3 3 0 0 1 0 5.8M16 14c2.7.3 4.2 2.3 4.5 5"/></svg></span><span>Participants</span></button>
+          <button data-view="sessions" class="nav-item flex shrink-0 items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white lg:w-full" aria-current="false"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 9h18M8 13h3M8 17h7"/></svg></span><span>Sessions</span></button>
+          <button data-view="reports" class="nav-item flex shrink-0 items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white lg:w-full" aria-current="false"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7M3 20h18"/></svg></span><span>Reports</span></button>
+          <button data-view="settings" class="nav-item flex shrink-0 items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white lg:w-full" aria-current="false"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6"/><circle cx="14" cy="7" r="2"/><circle cx="6" cy="17" r="2"/></svg></span><span>System</span></button>
+        </nav>
+
+        <div class="sidebar-status scanner-dock mt-4 text-xs text-slate-400 lg:mt-auto">
+          <button id="scannerLaunch" data-view="scanner" class="scanner-launch nav-item w-full text-left text-white" aria-current="false" aria-label="Open attendance scanner">
+            <span class="scanner-ready"><span class="scanner-ready-dot" aria-hidden="true"></span>Ready to scan</span>
+            <span class="scanner-launch-main">
+              <span class="scanner-launch-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8 9h2v2H8zM14 9h2v2h-2zM8 14h2v2H8zM13 14h3v2h-3z"/></svg></span>
+              <span class="scanner-launch-copy"><strong>Open Scanner</strong><small>Record attendance now</small></span>
+              <span class="scanner-launch-arrow" aria-hidden="true">›</span>
+            </span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="app-main min-w-0 lg:col-start-2">
+      <header class="app-header relative border-b border-slate-200 bg-white/90 px-4 py-5 backdrop-blur sm:px-6 lg:sticky lg:top-0 lg:z-20 lg:px-8">
+        <div class="header-inner mx-auto flex max-w-[1500px] flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div class="page-eyebrow text-[11px] font-extrabold uppercase tracking-[0.18em] text-blue-700">Pentecostal Royal Youth</div>
+            <h1 id="pageTitle" class="mt-1 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">Dashboard</h1>
+          </div>
+          <div class="topbar-actions flex items-center gap-3">
+            <div id="syncBadge" class="badge success">● Synced</div>
+            <div class="event-control">
+              <label class="event-label" for="activeEventSelect">Active Event</label>
+              <select id="activeEventSelect" class="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 sm:min-w-[280px]"></select>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="app-content mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <section id="view-dashboard" class="view active"></section>
+        <section id="view-events" class="view"></section>
+        <section id="view-participants" class="view"></section>
+        <section id="view-sessions" class="view"></section>
+        <section id="view-scanner" class="view"></section>
+        <section id="view-reports" class="view"></section>
+        <section id="view-settings" class="view"></section>
+      </div>
+    </main>
+  </div>
+
+  <div id="modalRoot"></div>
+  <?!= include('App'); ?>
+</body>
+</html>
