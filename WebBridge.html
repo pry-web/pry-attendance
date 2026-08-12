@@ -44,8 +44,10 @@ window.__PRY_PREVIEW__ = false;
     const key = await getOfficerKey();
     const response = await fetch(`${apiUrl}/api`, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json', 'X-PRY-Officer-Key': key},
-      body: JSON.stringify({fn, args}),
+      // text/plain keeps this a CORS "simple request", avoiding a separate
+      // preflight round trip on a newly opened officer device.
+      headers: {'Content-Type': 'text/plain;charset=UTF-8'},
+      body: JSON.stringify({fn, args, officerKey:key}),
     });
     const payload = await response.json().catch(() => ({}));
     if (response.status === 401 && retry) {
